@@ -12,17 +12,17 @@ class tf_ann:
 			])
 		self.model.compile(optimizer=optimizer, loss=loss)
 		self.model.summary()
-	
-	
-	def fit(self, funcx=np.log, range=[-1,1], points=2**11, batch_size=32, epochs=512):
-		self.ary = np.linspace(range[0], range[1], points)
+
+
+	def fit(self, funcx=np.log, frange=[-1,1], points=2**11, batch_size=32, epochs=512):
+		self.ary = np.linspace(frange[0], frange[1], points)
 		x_train = []
 		y_train = []
 
 		for i in self.ary:
 			xal = []
-			for d in self.degree:
-				xal.append(i**d)			
+			for d in range(self.degree):
+				xal.append(i**(d+1))
 			x_train.append(xal)
 			y_train.append(funcx(i))
 
@@ -39,8 +39,8 @@ class tf_ann:
 			self.coeffs.append(w[0])
 
 		return self.coeffs
-	
-	
+
+
 	def predict(self, x):
 		result = 0
 		for i in range(len(self.coeffs)):
