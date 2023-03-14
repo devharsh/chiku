@@ -3,13 +3,14 @@ requires = [
     "setuptools>=61.0",
     "wheel",
     "numpy",
-    "tensorflow"
+    "tensorflow",
+    "numdifftools"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "chiku"
-version = "0.0.7"
+version = "0.0.8"
 authors = [
     { name="Devharsh Trivedi", email="devharsh@live.in" },
 ]

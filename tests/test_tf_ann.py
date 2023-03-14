@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 class Test_TF_ANN(unittest.TestCase):
-	def test_tf_ann_n1(self):
+	def test_tf_ann(self):
 		def sigmoid(x):
 			return 1/(1+np.exp(-x))
 
