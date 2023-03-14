@@ -1,0 +1,29 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+	"numpy",
+	"tensorflow"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chiku"
+version = "0.0.6"
+authors = [
+  { name="Devharsh Trivedi", email="devharsh@live.in" },
+]
+description = "A Python package for polynomial approximation of arbitrary functions."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://com.puter.tips/"
+"Docs" = "https://com.puter.tips/"
+"Bug Tracker" = "https://com.puter.tips/"
+"repository" = "https://com.puter.tips/"
