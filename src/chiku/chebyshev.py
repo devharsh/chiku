@@ -16,6 +16,16 @@ class chebyshev:
 		print(self.c)
 
 
+	def __len__(self):
+		return len(self.c)
+
+	def __getitem__(self, idx):
+		return self.c[idx]
+
+	def __setitem__(self, idx, val):
+		self.c[idx] = val
+
+
 	def predict(self, x):
 		y = (2.0 * x - self.a - self.b) * (1.0 / (self.b - self.a))
 		y2 = 2.0 * y

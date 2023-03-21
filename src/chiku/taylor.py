@@ -13,6 +13,15 @@ class taylor:
 			ider = nd.Derivative(funcx, n=i)
 			self.coeffs.append(ider(self.fpoint)/math.factorial(i))
 
+	def __len__(self):
+		return len(self.coeffs)
+
+	def __getitem__(self, idx):
+		return self.coeffs[idx]
+
+	def __setitem__(self, idx, val):
+		self.coeffs[idx] = val
+
 	def print_equation(self):
 		eqn_string = ""
 		for i in range(self.degree + 1):
