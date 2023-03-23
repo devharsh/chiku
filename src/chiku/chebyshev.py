@@ -13,7 +13,6 @@ class chebyshev:
 		fac = 2.0 / degree
 		self.c = [fac * sum([f[k] * math.cos(math.pi * j * (k + 0.5) / degree)
 			for k in range(degree)]) for j in range(degree)]
-		print(self.c)
 
 
 	def __len__(self):
@@ -24,6 +23,12 @@ class chebyshev:
 
 	def __setitem__(self, idx, val):
 		self.c[idx] = val
+
+	def get_coeffs(self):
+		return self.c
+
+	def print_coeffs(self):
+		print(self.c)
 
 
 	def predict(self, x):
