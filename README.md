@@ -4,14 +4,12 @@
 
 Complex (non-linear) functions like Sigmoid ( $\sigma(x)$ ) and Hyperbolic Tangent ( $\tanh{x}$ ) can be computed with Fully Homomorphic Encryption (FHE) in an encrypted domain using piecewise-linear functions (a linear approximation of $\sigma(x) = 0.5 + 0.25x$ can be derived from the first two terms of Taylor series $\frac{1}{2} + \frac{1}{4}x$ ) or polynomial approximations like Taylor, Pade, Chebyshev, Remez, and Fourier series. These deterministic approaches yield the same polynomial for the same function. In contrast, we propose to use Artificial Neural Network ( $ANN$ ) to derive the approximation polynomial probabilistically, where the coefficients are based on the initial weights and convergence of the $ANN$ model. Our scheme is publicly available here as an open-source Python package.
 
-
 Library | Taylor | Fourier | Pade | Chebyshev | Remez | ANN
 --------|--------|---------|------|-----------|-------|-----
-numpy||||:heavy_check_mark:||
-scipy|:heavy_check_mark:||:heavy_check_mark:|||
-mpmath|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:||
-chiku|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:
-
+[numpy](https://github.com/numpy/numpy)||||:heavy_check_mark:||
+[scipy](https://github.com/scipy/scipy)|:heavy_check_mark:||:heavy_check_mark:|||
+[mpmath](https://github.com/mpmath/mpmath)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:||
+[chiku](https://github.com/devharsh/chiku)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:
 
 The table above compares our library with other popular Python packages for numerical analysis. While the $mpmath$ library provides Taylor, Pade, Fourier, and Chebyshev approximations, a user has to transform the functions to suit the $mpmath$ datatypes (e.g., $mpf$ for real float and $mpc$ for complex values). In contrast, our library requires no modifications and can approximate arbitrary functions. Additionally, we provide Remez approximation along with the other methods supported by the $mpmath$.
 
