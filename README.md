@@ -1,7 +1,10 @@
 ## chiku
 ### Efficient Probabilistic Polynomial Function Approximation Python Library.
 
+#### Installation
+To install run: <code>pip install chiku</code>
 
+#### Approximation Libraries
 Complex (non-linear) functions like Sigmoid ( $\sigma(x)$ ) and Hyperbolic Tangent ( $\tanh{x}$ ) can be computed with Fully Homomorphic Encryption (FHE) in an encrypted domain using piecewise-linear functions (a linear approximation of $\sigma(x) = 0.5 + 0.25x$ can be derived from the first two terms of Taylor series $\frac{1}{2} + \frac{1}{4}x$ ) or polynomial approximations like Taylor, Pade, Chebyshev, Remez, and Fourier series. These deterministic approaches yield the same polynomial for the same function. In contrast, we propose to use Artificial Neural Network ( $ANN$ ) to derive the approximation polynomial probabilistically, where the coefficients are based on the initial weights and convergence of the $ANN$ model. Our scheme is publicly available here as an open-source Python package.
 
 Library | Taylor | Fourier | Pade | Chebyshev | Remez | ANN
@@ -13,6 +16,7 @@ Library | Taylor | Fourier | Pade | Chebyshev | Remez | ANN
 
 The table above compares our library with other popular Python packages for numerical analysis. While the $mpmath$ library provides Taylor, Pade, Fourier, and Chebyshev approximations, a user has to transform the functions to suit the $mpmath$ datatypes (e.g., $mpf$ for real float and $mpc$ for complex values). In contrast, our library requires no modifications and can approximate arbitrary functions. Additionally, we provide Remez approximation along with the other methods supported by the $mpmath$.
 
+#### ANN Approximation
 While $ANN$ are known for their universal function approximation properties, they are often treated as a black box and used to calculate the output value. We propose to use a basic 3-layer perceptron consisting of an input layer, a hidden layer, and an output layer; both hidden and output layers have linear activations to generate the coefficients for an approximation polynomial of a given order. In this architecture, the input layer is dynamic, with the input nodes corresponding to the desired polynomial degrees. While having a variable number of hidden layers is possible, we fix it to a single layer with a single node to minimize the computation.
 
 ![Polynomial approximation using ANN](https://github.com/devharsh/chiku/blob/main/ANN-approximation.drawio.png "Polynomial approximation using ANN")
