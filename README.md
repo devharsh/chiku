@@ -9,10 +9,10 @@ Complex (non-linear) functions like Sigmoid ( $\sigma(x)$ ) and Hyperbolic Tange
 
 Library | Taylor | Fourier | Pade | Chebyshev | Remez | ANN
 --------|--------|---------|------|-----------|-------|-----
-[numpy](https://github.com/numpy/numpy)||||:heavy_check_mark:||
-[scipy](https://github.com/scipy/scipy)|:heavy_check_mark:||:heavy_check_mark:|||
-[mpmath](https://github.com/mpmath/mpmath)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:||
-[chiku](https://github.com/devharsh/chiku)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:
+[numpy](https://github.com/numpy/numpy)||||✔||
+[scipy](https://github.com/scipy/scipy)|✔||✔|||
+[mpmath](https://github.com/mpmath/mpmath)|✔|✔|✔|✔||
+[chiku](https://github.com/devharsh/chiku)|✔|✔|✔|✔|✔|✔
 
 The table above compares our library with other popular Python packages for numerical analysis. While the $mpmath$ library provides Taylor, Pade, Fourier, and Chebyshev approximations, a user has to transform the functions to suit the $mpmath$ datatypes (e.g., $mpf$ for real float and $mpc$ for complex values). In contrast, our library requires no modifications and can approximate arbitrary functions. Additionally, we provide Remez approximation along with the other methods supported by the $mpmath$.
 
