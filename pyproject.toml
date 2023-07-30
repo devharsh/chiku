@@ -12,11 +12,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chiku"
-version = "0.0.23"
+version = "0.0.25"
 authors = [
     { name="Devharsh Trivedi", email="devharsh@live.in" },
 ]
-description = "A Python package for polynomial approximation of arbitrary functions."
+description = "Python package for efficient probabilistic polynomial approximation of arbitrary functions."
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
@@ -26,7 +26,7 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://com.puter.tips/"
-"Docs" = "https://com.puter.tips/"
-"Bug Tracker" = "https://com.puter.tips/"
-"repository" = "https://com.puter.tips/"
+"Homepage" = "https://github.com/devharsh/chiku/blob/main/README.md"
+"Docs" = "https://github.com/devharsh/chiku/tree/main/tests"
+"Bug Tracker" = "https://github.com/devharsh/chiku/issues"
+"repository" = "https://github.com/devharsh/chiku"

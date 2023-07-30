@@ -4,10 +4,10 @@ from tensorflow import keras
 
 class tf_ann:
 
-	def __init__(self, degree=5, optimizer='adam', loss=keras.losses.MeanSquaredError()):
+	def __init__(self, degree=[1,2,3,4,5], optimizer='adam', loss=keras.losses.MeanSquaredError()):
 		self.degree = degree
 		self.model = keras.Sequential([
-			keras.layers.Dense(1, input_dim=self.degree, activation=keras.activations.linear),
+			keras.layers.Dense(1, input_dim=len(self.degree), activation=keras.activations.linear),
 			keras.layers.Dense(1, activation=keras.activations.linear)
 			])
 		self.model.compile(optimizer=optimizer, loss=loss)
@@ -21,8 +21,8 @@ class tf_ann:
 
 		for i in self.ary:
 			xal = []
-			for d in range(self.degree):
-				xal.append(i**(d+1))
+			for d in self.degree:
+				xal.append(i**d)
 			x_train.append(xal)
 			y_train.append(funcx(i))
 
@@ -39,6 +39,13 @@ class tf_ann:
 			self.coeffs.append(w[0])
 
 		return self.coeffs
+
+
+	def get_coeffs(self):
+		return self.coeffs
+
+	def print_coeffs(self):
+		print(self.coeffs)
 
 
 	def predict(self, x):
