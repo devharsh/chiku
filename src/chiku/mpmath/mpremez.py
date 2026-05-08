@@ -1,182 +1,210 @@
-# BSD 3-Clause License
-#
-# Copyright (c) 2021, Dustin Kenefake
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice, this
-#    list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its
-#    contributors may be used to endorse or promote products derived from
-#    this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""mpRemez: minimax (Remez exchange) polynomial approximation in arbitrary
+precision via mpmath.
+
+Iteratively constructs the polynomial of degree ``n`` that minimizes the
+uniform error against ``func`` on ``[a, b]``. Internally works with a
+Chebyshev-series representation in the standard variable ``t in [-1, 1]``;
+``predict`` accepts the original variable ``x``.
+
+Coefficient layout (returned by ``get_coeffs``): ascending power-series
+coefficients in the original variable ``x``.
+"""
+
+import mpmath as mp
 
 
+class mpRemez:
+    """Iterative Remez minimax approximation in arbitrary precision.
 
+    Parameters
+    ----------
+    func : callable
+        Target function. Must accept and return mpmath types.
+    degree : int
+        Degree of the approximating polynomial.
+    domain : tuple of (mpf or float), optional
+        Interval ``(a, b)``. Default ``(-1, 1)``.
+    max_iter : int, optional
+        Maximum Remez exchange iterations. Default 50.
 
-from mpmath import mp
-import numpy
-
-
-
-def bisection_search(f, low:float, high:float):
+    Attributes
+    ----------
+    coeffs : list of mpf
+        Chebyshev-series coefficients in the standard variable ``t``.
+    E : mpf
+        Signed equioscillation error from the final linear solve.
     """
-    A root finding method that does not rely on derivatives
 
-    :param f: a function f: X -> R
-    :param low: the lower bracket
-    :param high: the upper limit bracket
-    :return: the location of the root, e.g. f(mid) ~ 0
-    """
-    # flip high and low if out of order
-    if f(high) < f(low):
-        low, high = high, low
+    def __init__(self, func, degree, domain=(-1, 1), max_iter=50):
+        self.func = func
+        self.n = int(degree)
+        self.a, self.b = mp.mpf(domain[0]), mp.mpf(domain[1])
+        if self.b <= self.a:
+            raise ValueError("require domain[1] > domain[0]")
+        self.max_iter = int(max_iter)
 
-    # find mid point
-    mid = .5 * (low + high)
+        self.map_to_std = lambda x: (2 * x - (self.a + self.b)) / (self.b - self.a)
+        self.map_from_std = lambda t: mp.mpf(0.5) * (self.b - self.a) * t + mp.mpf(0.5) * (self.a + self.b)
+        self.f_std = lambda t: self.func(self.map_from_std(t))
 
-    while True:
+        # initial reference: Chebyshev nodes of T_{n+1} (n+2 points in [-1, 1])
+        self.x = sorted(
+            mp.cos(mp.pi * k / mp.mpf(self.n + 1))
+            for k in range(self.n + 2)
+        )
+        self.coeffs = None
+        self.E = None
+        self._solve()
 
-        # bracket up
-        if f(mid) < 0:
-            low = mid
-        # braket down
-        else:
-            high = mid
+    # ---------- helpers ----------
+    def _chebT(self, t, n):
+        if n == 0:
+            return mp.mpf(1)
+        if n == 1:
+            return t
+        T0, T1 = mp.mpf(1), t
+        for _ in range(2, n + 1):
+            T0, T1 = T1, 2 * t * T1 - T0
+        return T1
 
-        # update mid point
-        mid = .5 * (high + low)
+    def _cheb_series(self, t, coeffs):
+        return sum(c * self._chebT(t, i) for i, c in enumerate(coeffs))
 
-        # break if condition met
-        if abs(high - low) < 10 ** (-(mp.dps / 2)):
-            break
+    def _find_all_extrema(self, r, n_grid=8000):
+        grid = [mp.mpf(-1) + 2 * i / mp.mpf(n_grid) for i in range(n_grid + 1)]
+        vals = [r(t) for t in grid]
+        pts, rvs = [grid[0]], [vals[0]]
+        for i in range(1, n_grid):
+            dl = vals[i] - vals[i - 1]
+            dr = vals[i + 1] - vals[i]
+            if dl * dr < 0:
+                lo, hi = grid[i - 1], grid[i + 1]
+                fine = [lo + (hi - lo) * j / mp.mpf(200) for j in range(201)]
+                fine_v = [r(t) for t in fine]
+                best = max(range(201), key=lambda j: abs(fine_v[j]))
+                pts.append(fine[best])
+                rvs.append(fine_v[best])
+        pts.append(grid[-1])
+        rvs.append(vals[-1])
+        return pts, rvs
 
-    return mid
+    def _select_alternating(self, pts, rvs, n_needed):
+        t_alt, v_alt = [pts[0]], [rvs[0]]
+        for t, v in zip(pts[1:], rvs[1:]):
+            if mp.sign(v) == mp.sign(v_alt[-1]):
+                if abs(v) > abs(v_alt[-1]):
+                    t_alt[-1], v_alt[-1] = t, v
+            else:
+                t_alt.append(t)
+                v_alt.append(v)
+        if len(t_alt) <= n_needed:
+            return t_alt
+        best_ref, best_score = None, mp.mpf(-1)
+        for s in range(len(t_alt) - n_needed + 1):
+            score = min(abs(v) for v in v_alt[s : s + n_needed])
+            if score > best_score:
+                best_score = score
+                best_ref = t_alt[s : s + n_needed]
+        return best_ref
 
+    def _cheb_to_power(self, coeffs):
+        n = len(coeffs)
+        poly = [mp.mpf(0)] * n
+        for k, c in enumerate(coeffs):
+            if k == 0:
+                poly[0] += c
+            elif k == 1:
+                poly[1] += c
+            else:
+                T0 = [mp.mpf(1)]
+                T1 = [mp.mpf(0), mp.mpf(1)]
+                for _ in range(2, k + 1):
+                    Tn = [mp.mpf(0)] * (len(T1) + 1)
+                    for i in range(len(T1)):
+                        Tn[i + 1] += 2 * T1[i]
+                    for i in range(len(T0)):
+                        Tn[i] -= T0[i]
+                    T0, T1 = T1, Tn
+                for i in range(len(T1)):
+                    poly[i] += c * T1[i]
+        return poly
 
-def concave_max(f, low:float, high:float):
-    """
-    Forms a lambda for the approximate derivative and finds the root
+    # ---------- main loop ----------
+    def _solve(self):
+        N = self.n + 2
+        coeffs = E = None
+        for _ in range(self.max_iter):
+            A = mp.matrix(N, N)
+            b_vec = mp.matrix(N, 1)
+            for i, t in enumerate(self.x):
+                for j in range(self.n + 1):
+                    A[i, j] = self._chebT(t, j)
+                A[i, self.n + 1] = (-1) ** i
+                b_vec[i] = self.f_std(t)
+            sol = mp.lu_solve(A, b_vec)
+            coeffs = [sol[i] for i in range(self.n + 1)]
+            E = sol[self.n + 1]
 
-    :param f: a function f: X -> R
-    :param low: the lower bracket
-    :param high: the upper limit bracket
-    :return: the location of the root f'(mid) ~ 0
-    """
-    # create an approximate derivative expression
-    scale = high - low
+            def r(t, coeffs=coeffs):
+                return self.f_std(t) - self._cheb_series(t, coeffs)
 
-    h = mp.mpf('0.' + ''.join(['0' for i in range(int(mp.dps / 1.5))]) + '1') * scale
-    df = lambda x: (f(x + h) - f(x - h)) / (2.0 * h)
+            pts, rvs = self._find_all_extrema(r)
+            new_x = self._select_alternating(pts, rvs, N)
+            if len(new_x) < N:
+                break
 
-    return bisection_search(df, low, high)
+            r_abs = [abs(r(t)) for t in new_x]
+            max_e, min_e = max(r_abs), min(r_abs)
+            if max_e > 0 and (max_e - min_e) / max_e < mp.mpf("1e-10"):
+                self.x = new_x
+                break
+            self.x = new_x
 
-def chev_points(n:int, lower:float = -1, upper:float = 1):
-    """
-    Generates a set of chebychev points spaced in the range [lower, upper]
-    :param n: number of points
-    :param lower: lower limit
-    :param upper: upper limit
-    :return: a list of multipressison chebychev points that are in the range [lower, upper]
-    """
-    #generate chebeshev points on a range [-1, 1]
-    index = numpy.arange(1, n+1)
-    range_ = abs(upper - lower)
-    return [(.5*(mp.cos((2*i-1)/(2*n)*mp.pi)+1))*range_ + lower for i in index]
+        self.coeffs = coeffs
+        self.E = E
 
+    # ---------- container API ----------
+    def __len__(self):
+        return len(self.coeffs)
 
-def remez(func, n_degree:int, lower:float=-1, upper:float=1, max_iter:int = 10):
-    """
-    :param func: a function (or lambda) f: X -> R
-    :param n_degree: the degree of the polynomial to approximate the function f
-    :param lower: lower range of the approximation
-    :param upper: upper range of the approximation
-    :return: the polynomial coefficients, and an approximate maximum error associated with this approximation
-    """
-    # initialize the node points
+    def __getitem__(self, idx):
+        return self.coeffs[idx]
 
-    x_points = chev_points(n_degree + 2, lower, upper)
+    def __setitem__(self, idx, val):
+        self.coeffs[idx] = val
 
-    A = mp.matrix(n_degree + 2)
-    coeffs = numpy.zeros(n_degree + 2)
+    # ---------- public API ----------
+    def predict(self, x):
+        """Evaluate the minimax polynomial at x."""
+        x = mp.mpf(x) if not isinstance(x, mp.mpc) else x
+        t = self.map_to_std(x)
+        return self._cheb_series(t, self.coeffs)
 
-    # place in the E column
-    mean_error = float('inf')
+    def get_coeffs(self):
+        """Power-series coefficients in the original variable x.
 
-    for i in range(n_degree + 2):
-        A[i, n_degree + 1] = (-1) ** (i + 1)
+        Returns ``[c0, c1, ..., cn]`` such that
+        ``p(x) = c0 + c1*x + ... + cn*x**n``.
+        """
+        power_t = self._cheb_to_power(self.coeffs)  # p(t) = sum c_k t^k
 
-    for i in range(max_iter):
+        # t = alpha*x + beta
+        alpha = mp.mpf(2) / (self.b - self.a)
+        beta = -(self.a + self.b) / (self.b - self.a)
 
-        # build the system
-        vander = numpy.polynomial.chebyshev.chebvander(x_points, n_degree)
+        n = len(power_t)
+        power_x = [mp.mpf(0)] * n
+        for k in range(n):
+            if power_t[k] == 0:
+                continue
+            # c_k * (alpha*x + beta)**k = c_k * sum_j C(k,j) alpha^j beta^(k-j) x^j
+            binom = mp.mpf(1)
+            for j in range(k + 1):
+                power_x[j] += power_t[k] * binom * (alpha ** j) * (beta ** (k - j))
+                if j < k:
+                    binom = binom * (k - j) / (j + 1)
+        return [float(c) for c in power_x]
 
-        for i in range(n_degree + 2):
-            for j in range(n_degree + 1):
-                A[i, j] = vander[i, j]
-
-        b = mp.matrix([func(x) for x in x_points])
-        l = mp.lu_solve(A, b)
-
-        coeffs = l[:-1]
-
-        # build the residual expression
-        r_i = lambda x: (func(x) - numpy.polynomial.chebyshev.chebval(x, coeffs))
-
-        interval_list = list(zip(x_points, x_points[1:]))
-        #         interval_list = [[x_points[i], x_points[i+1]] for i in range(len(x_points)-1)]
-
-        intervals = [upper]
-        intervals.extend([bisection_search(r_i, *i) for i in interval_list])
-        intervals.append(lower)
-
-        extermum_interval = [[intervals[i], intervals[i + 1]] for i in range(len(intervals) - 1)]
-
-        extremums = [concave_max(r_i, *i) for i in extermum_interval]
-
-        extremums[0] = mp.mpf(upper)
-        extremums[-1] = mp.mpf(lower)
-
-        errors = [abs(r_i(i)) for i in extremums]
-        mean_error = numpy.mean(errors)
-
-        if numpy.max([abs(error - mean_error) for error in errors]) < 0.000001 * mean_error:
-            break
-
-        x_points = extremums
-
-    return [float(i) for i in numpy.polynomial.chebyshev.cheb2poly(coeffs)], float(mean_error)
-
-def c_code_gen(data_type, name, poly_coeffs, comments = None):
-    method_string = f'{data_type} {name} ({data_type} x)' + '{\n'
-
-    if comments is not None:
-        method_string += '\t// ' + str(comments) + ' \n\n'
-
-    data_type_converter = '' if data_type == 'double' else 'f'
-
-    method_string += '\n'.join([f'\tconst {data_type} a_{i} = {str(val) + data_type_converter};' for i, val in enumerate(poly_coeffs)])
-
-    horner = 'return a_0+'
-    for i in range(len(poly_coeffs)-2):
-        horner += f'x*(a_{i+1} +'
-    horner += f'x*a_{len(poly_coeffs)-1}' + ')'*(len(poly_coeffs)-2) + ';\n}'
-
-    return method_string + '\n \t' + horner
+    def get_error(self):
+        """Equioscillation error magnitude as a float."""
+        return float(abs(self.E))

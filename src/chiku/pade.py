@@ -1,95 +1,94 @@
-from sympy import symbols, solve
+"""Pade rational approximation in numpy.
+
+Constructs the [pd / qd] Pade approximant of ``f`` around the midpoint of
+``frange``. Internally:
+
+1. Computes ``pd + qd + 1`` Taylor coefficients of ``f`` by numerical
+   differentiation at the midpoint.
+2. Solves the linear Pade equations directly with ``numpy.linalg.solve``
+   (with an ``lstsq`` fallback for singular systems).
+3. Stores ``p`` (numerator) and ``q`` (denominator), with ``q[0] = 1``.
+
+The resulting rational function is evaluated as ``P(u) / Q(u)`` where
+``u = x - fpoint``.
+"""
+
+import math
+
+import numpy as np
+import numdifftools as nd
 
 
 class pade:
 
-	def __init__(self, fcoeffs=[0.622459, 0.235004, -0.0287784, -0.0160595, 0.00436483, 0.00113017, -0.000542105], pd=4, qd=4):
+    def __init__(self, f, pd=3, qd=3, frange=(-1.0, 1.0)):
+        self.f = f
+        self.pd = int(pd)
+        self.qd = int(qd)
+        self.a, self.b = float(frange[0]), float(frange[1])
+        if self.b <= self.a:
+            raise ValueError("require frange[1] > frange[0]")
+        self.fpoint = 0.5 * (self.a + self.b)
 
-		ta = fcoeffs
-		tl = len(ta)
-		aa = []
-		al = pd
-		ba = ["1"]
-		bl = qd
+        # 1. Taylor coefficients a_0 .. a_{pd+qd} around fpoint
+        N = self.pd + self.qd + 1
+        a = np.empty(N, dtype=float)
+        for k in range(N):
+            ider = nd.Derivative(f, n=k)
+            a[k] = float(ider(self.fpoint)) / math.factorial(k)
 
-		for a in range(al):
-			aa.append("a"+str(a))
+        # 2. Solve  P(u) = Q(u) * sum_k a_k u^k  mod u^N, with Q(0) = 1.
+        #    Unknowns are [p_0..p_pd, q_1..q_qd].
+        #    Equation k (k = 0..N-1):
+        #        sum_{i=0..min(k,qd)} a_{k-i} q_i  =  p_k         (with q_0 = 1)
+        #    rearranged:
+        #        p_k - sum_{i=1..min(k,qd)} a_{k-i} q_i  =  a_k   for k <= pd
+        #            - sum_{i=1..min(k,qd)} a_{k-i} q_i  =  a_k   for k >  pd
+        A = np.zeros((N, N), dtype=float)
+        b_vec = np.zeros(N, dtype=float)
+        for k in range(N):
+            if k <= self.pd:
+                A[k, k] = 1.0
+            for i in range(1, min(k, self.qd) + 1):
+                A[k, self.pd + i] = -a[k - i]
+            b_vec[k] = a[k]
 
-		for b in range(1,bl):
-			ba.append("b"+str(b))
+        try:
+            sol = np.linalg.solve(A, b_vec)
+        except np.linalg.LinAlgError:
+            sol, *_ = np.linalg.lstsq(A, b_vec, rcond=None)
 
-		tb = []
+        self.p = np.array(sol[: self.pd + 1], dtype=float)
+        self.q = np.concatenate(([1.0], sol[self.pd + 1 :])).astype(float)
 
-		for b in range(bl):
-			temp = []
-			for t in range(tl):
-				temp.append(str(ta[t])+"*"+ba[b])
-			tb.append(temp)
+    def __len__(self):
+        # combined view: numerator then denominator (q_1..q_qd; q_0 fixed)
+        return len(self.p) + len(self.q) - 1
 
-		eq = []
+    def __getitem__(self, idx):
+        if idx < len(self.p):
+            return self.p[idx]
+        return self.q[idx - len(self.p) + 1]
 
-		for i in range(tl+bl-1):
-			if i == 0:
-				ia = [(0,0)]
-			else:
-				ia = list(set(ix))
+    def __setitem__(self, idx, val):
+        if idx < len(self.p):
+            self.p[idx] = val
+        else:
+            self.q[idx - len(self.p) + 1] = val
 
-			ix = []
-			str_eq = ""
+    def get_coeffs(self):
+        """Return ``(p, q)`` as numpy arrays, ascending power order."""
+        return np.array(self.p, dtype=float), np.array(self.q, dtype=float)
 
-			for s in ia:
-				ri,ci = s[0],s[1]
-				str_eq += "(" + tb[ri][ci] + ") + "
+    def print_coeffs(self):
+        print("p:", self.p)
+        print("q:", self.q)
 
-				if ri+1 < bl:
-					ix.append((ri+1,ci))
-				if ci+1 < tl:
-					ix.append((ri,ci+1))
-
-			eq.append(str_eq[:-2])
-
-		feq = []
-		for e in range(len(eq)):
-			if e < al:
-				feq.append(eq[e] + "- " + aa[e])
-			else:
-				feq.append(eq[e])
-
-		syma = []
-		for a in aa:
-			syma.append(a)
-		for b in range(1,bl):
-			syma.append(ba[b])
-
-		solution = solve(feq[:(al+bl-1)], syma)
-		print("Solution:", solution)
-
-		self.pa = []
-		self.qa = [1]
-
-		for a in aa:
-			self.pa.append(solution[symbols(a)])
-		for b in range(1,bl):
-			self.qa.append(solution[symbols(ba[b])])
-
-
-	def get_p_coeffs(self):
-		return self.pa
-
-	def get_q_coeffs(self):
-		return self.qa
-
-
-	def predict(self, x):
-		nom = 0
-		den = 0
-
-		for i in range(len(self.pa)):
-			nom += self.pa[i]*(x**i)
-		for i in range(len(self.qa)):
-			den += self.qa[i]*(x**i)
-
-		if den == 0:
-			den = 1
-
-		return nom/den
+    def predict(self, x):
+        x = np.asarray(x, dtype=float)
+        u = x - self.fpoint
+        # numpy.polyval expects descending coefficients
+        nom = np.polyval(self.p[::-1], u)
+        den = np.polyval(self.q[::-1], u)
+        den = np.where(den == 0, 1.0, den)
+        return nom / den

@@ -1,14 +1,16 @@
 import unittest
+
 from chiku import fourier
 
 
 class Test_Fourier(unittest.TestCase):
-	def test_fourier(self):
-		def f(x):
-			return x*x
+    def test_fourier(self):
+        def f(x):
+            return x * x
 
-		self.poly = fourier.fourier(f, -1, 5, 70)
-		self.assertEqual(round(self.poly.predict(2)), f(2))
+        self.poly = fourier.fourier(f, degree=70, frange=(-1, 5))
+        self.assertEqual(round(float(self.poly.predict(2))), f(2))
 
-if __name__ == '__main__':
-	unittest.main()
+
+if __name__ == "__main__":
+    unittest.main()

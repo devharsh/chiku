@@ -1,0 +1,163 @@
+------------------------------------------
+FILE: __init__.py
+------------------------------------------
+
+
+
+------------------------------------------
+FILE: test_chebyshev.py
+------------------------------------------
+import unittest
+from chiku import chebyshev
+import numpy as np
+import random
+
+class Test_Chebyshev(unittest.TestCase):
+	def test_chebyshev(self):
+		def sigmoid(x):
+			return 1/(1+np.exp(-x))
+
+		self.poly = chebyshev.chebyshev(sigmoid)
+		self.rnum = random.random()
+		self.assertAlmostEqual(self.poly.predict(self.rnum), sigmoid(self.rnum), 2)
+
+if __name__ == '__main__':
+	unittest.main()
+
+
+------------------------------------------
+FILE: test_fourier.py
+------------------------------------------
+import unittest
+from chiku import fourier
+
+
+class Test_Fourier(unittest.TestCase):
+	def test_fourier(self):
+		def f(x):
+			return x*x
+
+		self.poly = fourier.fourier(f, -1, 5, 70)
+		self.assertEqual(round(self.poly.predict(2)), f(2))
+
+if __name__ == '__main__':
+	unittest.main()
+
+
+------------------------------------------
+FILE: test_mpmath.py
+------------------------------------------
+import unittest
+from chiku.mpmath import mpdigits,mptaylor,mppade
+
+
+class Test_MPMath(unittest.TestCase):
+	def test_mpmath(self):
+		d = mpdigits.mpdigits()
+		one = d.get_d(1)
+
+		def f(x):
+			sqrt = d.sqrt()
+			return sqrt((one + 2*x)/(one + x))
+
+		self.t = mptaylor.mptaylor(f, 0, 6)
+
+		self.p = mppade.mppade(self.t, 3, 3)
+		self.x = 10
+
+		self.assertAlmostEqual(self.p.predict(self.x), f(self.x), 2)
+
+if __name__ == '__main__':
+	unittest.main()
+
+
+------------------------------------------
+FILE: test_pade.py
+------------------------------------------
+import unittest
+from chiku import taylor,pade
+import numpy as np
+import random
+
+class Test_Pade(unittest.TestCase):
+	def test_pade(self):
+		def sigmoid(x):
+			return 1/(1+np.exp(-x))
+
+		self.t_poly = taylor.taylor(sigmoid)
+		self.poly = pade.pade(self.t_poly.get_coeffs(), 3, 3)
+
+		self.rnum = random.random()
+		self.assertAlmostEqual(self.poly.predict(self.rnum), sigmoid(self.rnum), 2)
+
+if __name__ == '__main__':
+	unittest.main()
+
+
+------------------------------------------
+FILE: test_remez.py
+------------------------------------------
+import unittest
+from chiku import chebyshev, remez
+import numpy as np
+import random
+
+class Test_Remez(unittest.TestCase):
+	def test_remez(self):
+		def sigmoid(x):
+			return 1/(1+np.exp(-x))
+
+		self.cpoly = chebyshev.chebyshev(sigmoid, degree=6, frange=[-2,2])
+		self.poly = remez.remez(sigmoid, self.cpoly.get_coeffs(), degree=4)
+
+		self.rnum = random.random()
+		self.assertAlmostEqual(self.poly.predict(self.rnum), sigmoid(self.rnum), 2)
+
+if __name__ == '__main__':
+	unittest.main()
+
+
+------------------------------------------
+FILE: test_taylor.py
+------------------------------------------
+import unittest
+from chiku import taylor
+import numpy as np
+import random
+
+class Test_Taylor(unittest.TestCase):
+	def test_taylor(self):
+		def sigmoid(x):
+			return 1/(1+np.exp(-x))
+
+		self.poly = taylor.taylor(sigmoid)
+		self.rnum = random.random()
+		self.assertAlmostEqual(self.poly.predict(self.rnum), sigmoid(self.rnum), 2)
+
+if __name__ == '__main__':
+	unittest.main()
+
+
+------------------------------------------
+FILE: test_tf_ann.py
+------------------------------------------
+import unittest
+from chiku import tf_ann
+import numpy as np
+import random
+
+class Test_TF_ANN(unittest.TestCase):
+	def test_tf_ann(self):
+		def sigmoid(x):
+			return 1/(1+np.exp(-x))
+
+		self.poly = tf_ann.tf_ann()
+		self.poly.fit(sigmoid, epochs=256)
+
+		self.rnum = random.random()
+		self.assertAlmostEqual(self.poly.predict(self.rnum), sigmoid(self.rnum), 2)
+
+if __name__ == '__main__':
+	unittest.main()
+
+
