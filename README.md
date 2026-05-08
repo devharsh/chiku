@@ -1,5 +1,6 @@
-## chiku
-### Efficient Probabilistic Polynomial Function Approximation Python Library.
+## *chiku* - Efficient Probabilistic Polynomial Function Approximation Python Library
+### ![sapodilla](sapodilla_icon.png) Version 2, updated May 2026
+
 
 #### Installation
 To install run: <code>pip install chiku</code>
@@ -7,12 +8,12 @@ To install run: <code>pip install chiku</code>
 #### Approximation Libraries
 Complex (non-linear) functions like Sigmoid ( $\sigma(x)$ ) and Hyperbolic Tangent ( $\tanh{x}$ ) can be computed with Fully Homomorphic Encryption (FHE) in an encrypted domain using piecewise-linear functions (a linear approximation of $\sigma(x) = 0.5 + 0.25x$ can be derived from the first two terms of Taylor series $\frac{1}{2} + \frac{1}{4}x$ ) or polynomial approximations like Taylor, Pade, Chebyshev, Remez, and Fourier series. These deterministic approaches yield the same polynomial for the same function. In contrast, we propose to use Artificial Neural Network ( $ANN$ ) to derive the approximation polynomial probabilistically, where the coefficients are based on the initial weights and convergence of the $ANN$ model. Our scheme is publicly available here as an open-source Python package.
 
-Library | Taylor | Fourier | Pade | Chebyshev | Remez | ANN
---------|--------|---------|------|-----------|-------|-----
-[numpy](https://github.com/numpy/numpy)||||✔||
-[scipy](https://github.com/scipy/scipy)|✔||✔|||
-[mpmath](https://github.com/mpmath/mpmath)|✔|✔|✔|✔||
-[chiku](https://github.com/devharsh/chiku)|✔|✔|✔|✔|✔|✔
+Library | Taylor | Fourier | Pade | Chebyshev | Remez | ANN | LR
+--------|--------|---------|------|-----------|-------|-----|----
+[numpy](https://github.com/numpy/numpy)||||✔|||
+[scipy](https://github.com/scipy/scipy)|✔||✔||||
+[mpmath](https://github.com/mpmath/mpmath)|✔|✔|✔|✔|||
+[chiku](https://github.com/devharsh/chiku)|✔|✔|✔|✔|✔|✔|✔
 
 The table above compares our library with other popular Python packages for numerical analysis. While the $mpmath$ library provides Taylor, Pade, Fourier, and Chebyshev approximations, a user has to transform the functions to suit the $mpmath$ datatypes (e.g., $mpf$ for real float and $mpc$ for complex values). In contrast, our library requires no modifications and can approximate arbitrary functions. Additionally, we provide Remez approximation along with the other methods supported by the $mpmath$.
 
