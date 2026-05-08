@@ -1,5 +1,5 @@
 numdifftools==0.9.41
+SciPy==1.13.1
 numpy==1.26.4
-SciPy==1.11.3
 sympy==1.12
 tensorflow==2.16.1
