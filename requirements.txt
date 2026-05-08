@@ -1,5 +1,16 @@
-numdifftools==0.9.41
-sympy==1.12.1
-SciPy==1.13.1
+# Math & Differentiation
+numdifftools==0.9.42
+mpmath==1.4.1
+
+# Core Scientific Stack
+# numpy 1.26.4 is required for compatibility with TensorFlow 2.16 on Intel Macs
 numpy==1.26.4
-tensorflow==2.12.1
+scipy==1.17.1
+
+# Machine Learning & Data Science
+scikit-learn==1.8.0
+tensorflow==2.16.2
+
+# Testing & Development
+pytest==9.0.3
+setuptools==82.0.1
