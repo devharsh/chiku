@@ -9,7 +9,7 @@ scipy==1.17.1
 
 # Machine Learning & Data Science
 scikit-learn==1.8.0
-tensorflow==2.16.2
+tensorflow==2.21.0
 
 # Testing & Development
 pytest==9.0.3
