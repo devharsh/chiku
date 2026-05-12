@@ -4,7 +4,7 @@ mpmath==1.4.1
 
 # Core Scientific Stack
 # numpy 1.26.4 is required for compatibility with TensorFlow 2.16 on Intel Macs
-numpy==1.26.4
+numpy==2.2.6
 scipy==1.17.1
 
 # Machine Learning & Data Science
