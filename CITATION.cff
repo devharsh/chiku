@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "chiku"
+abstract: "An efficient polynomial function approximation Python library (Taylor, Fourier, Pade, Chebyshev, Remez, ANN, and linear regression approximators), useful for evaluating non-linear functions under Fully Homomorphic Encryption."
+authors:
+  - given-names: "Devharsh"
+    family-names: "Trivedi"
+    name-suffix: "Ph.D., CISSP"
+    email: "devharsh.1592@gmail.com"
+    city: "Washington"
+    region: "D.C."
+    post-code: "20003"
+    country: "US"
+version: "2.0.0"
+license: "AGPL-3.0-or-later"
+repository-code: "https://github.com/devharsh/chiku"
+url: "https://pypi.org/project/chiku/"
+keywords:
+  - "polynomial-approximation"
+  - "remez"
+  - "chebyshev"
+  - "pade"
+  - "fully-homomorphic-encryption"
+  - "numerical-analysis"
+preferred-citation:
+  type: conference-paper
+  title: "chiku: Efficient Probabilistic Polynomial Approximations Library"
+  authors:
+    - family-names: "Trivedi"
+      given-names: "Devharsh"
+    - family-names: "Kaaniche"
+      given-names: "Nesrine"
+    - family-names: "Boudguiga"
+      given-names: "Aymen"
+    - family-names: "Triandopoulos"
+      given-names: "Nikos"
+  year: 2024
