@@ -13,4 +13,4 @@ tensorflow==2.16.2
 
 # Testing & Development
 pytest==9.0.3
-setuptools==82.0.1
+setuptools==83.0.0
