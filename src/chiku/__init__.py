@@ -10,7 +10,7 @@ Arbitrary-precision variants live in the ``chiku.mpmath`` subpackage:
     from chiku.mpmath import mptaylor, mppade, mpchebyshev, mpfourier, mpremez
 """
 
-__version__ = "2.0.0"
+__version__ = "2.0.2"
 
 from . import taylor      # noqa: F401
 from . import pade        # noqa: F401

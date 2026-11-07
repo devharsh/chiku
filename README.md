@@ -1,6 +1,6 @@
 # *<img src="sapodilla_icon.png" width="36" height="36" alt="sapodilla" style="vertical-align: -4px; margin-left: 8px;"> chiku*
 ## Efficient Polynomial Function Approximation Python Library
-### Version 2, updated May 2026
+### Version 2, updated November 2026
 
 [![PyPI version](https://img.shields.io/pypi/v/chiku.svg)](https://pypi.org/project/chiku/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
